@@ -17,7 +17,6 @@ A powerful and elegant **pipelining and mapping** library for the [Red programmi
 * **⚙️ Flexible Actions:** Use functions, code blocks, or values directly in your chains.
 * **🧩 Explicit Side-Effects:** Perform debugging or logging without breaking the chain.
 
-
 ### Comparison of Piping & Mapping Features
 
 | Feature                             | **pipe-map.red (This Library)**                                   | **Elixir**            | **JavaScript (Lodash)** | **R (tidyverse)**        | **F#**                                 | **Clojure**                     |
@@ -161,19 +160,19 @@ probe my-map
 
 ### 2. Complex Mathematical Chain
 
+NOTE: This is to show the flexibility of this piping/mapping library, not necessarily the best way to code!
+
 ```red
 ; Generate stats for a list of random numbers
 random/seed 1
-(number-gen 100 1000 100)
-    --> nums
-    |> [
-        print ["Count:" length? _p]
-        print ["Mean:" average _p]
-        _p ; Pass the data on
-    ]
-    |> [variance _p] --> var
-    |> [stddev _p] --> sd
-    |> [pop-kurtosis _p] --> kurt
+(number-gen 100 1000 100) --> nums 
+	|> [
+		print ["count" length? _p] 
+		print ["mean" average _p] 
+		_p] 
+	|> [((variance _p) --> var) _p] 
+	|> [((stddev _p) --> sd) _p] 
+	|> [((pop-kurtosis _p) --> kurt) _p]
 
 print ["Variance:" var]
 print ["Std Dev:" sd]
