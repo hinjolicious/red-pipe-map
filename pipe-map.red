@@ -83,7 +83,7 @@ replace-deep: function [ block[block! paren!] word[word!] value[any-type!] ] [
 do-action: function [value action ph] [
 	either word? action [ 
 		; value or a function with one arg only
-		res: do reduce [action value]
+		res: do compose [(action) value]
 	][
 		either block? action [ ; normal code, simple code, or just a block
 			act: copy/deep action ; use a copy, because it will be changed!
