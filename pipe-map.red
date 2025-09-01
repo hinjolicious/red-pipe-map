@@ -157,9 +157,9 @@ filter:	:pipe-map/filter
 
 ;=== END OF PIPING AND MAPPING ===
 
-;=== TEST ===
+;=== TEST === 
 
-halt ; comment this to execute the test codes below
+comment { 
 
 ;-- 1. Simple pipe
 
@@ -291,3 +291,5 @@ print ["kurtosis" nums |> pop-kurtosis]
 ; variance 4
 ; stddev 2.0
 ; kurtosis 2.78125
+
+}
