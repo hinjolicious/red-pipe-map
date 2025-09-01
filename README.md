@@ -17,6 +17,21 @@ A powerful and elegant **pipelining and mapping** library for the [Red programmi
 * **⚙️ Flexible Actions:** Use functions, code blocks, or values directly in your chains.
 * **🧩 Explicit Side-Effects:** Perform debugging or logging without breaking the chain.
 
+
+### Comparison of Piping & Mapping Features
+
+| Feature                             | **pipe-map.red (This Library)**                                   | **Elixir**            | **JavaScript (Lodash)** | **R (tidyverse)**        | **F#**                                 | **Clojure**                     |
+| :---------------------------------- | :---------------------------------------------------------------------- | :-------------------------- | :---------------------------- | :----------------------------- | :------------------------------------------- | :------------------------------------ |
+| **Piping Operator**           | `value`&#124;> `action`                                             | `value`&#124;> function  | `_.chain(value).func()`     | `value %>% function()`       | `<code>`value &#124;> function `</code>` | `(-> value (func))`                 |
+| **Mapping Operator**          | `series` ==> `action`                                               | `enum                       | > Enum.map(fn)`               | `_.map(collection, fn)`      | `map(list, fn)` or `purrr::map()`        | `list                                 |
+| **Implicit Placeholder**      | **Yes** ( `[* 2]` `= [_p * 2]`                               | Yes (&(&1 * 2)              | Yes (Lodash FP)               | Yes (`.` placeholder)        | No                                           | **Yes** (Threading macros)      |
+| **Explicit Placeholder**      | **Yes** (`_p`, `_m`, `_e`)                                  | `&1`, `&2`              | `(x) => x * 2`              | `~ .x`                       | `fun x -> x * 2`                           | `#(* % 2)`                          |
+| **Inline Filtering**          | **Yes** (`[filter _p [_e > 5]]`)                                | `Enum.filter(enum, fn)`   | `_.filter(collection, fn)`  | `filter(list, condition)`    | `List.filter(fn)`                          | `(filter fn coll)`                  |
+| **Mixed Piping/Mapping**      | **Yes** (Seamless &#124;> + `==>`)                              | Yes (with `Enum` module)  | Yes (with `.value()` break) | Yes (with `%>%` + `map()`) | Yes                                          | Yes                                   |
+| **Left-to-Right Assignment** | **Yes** (`value --> var`)                                       | No (standard `=`)         | No (standard `=`)           | `->` / `->>`               | No (standard `let`)                        | No                                    |
+| **Syntax Style**              | **Native, Idiomatic Red**                                         | Native, Idiomatic           | Library-based                 | Library-based                  | Native, Idiomatic                            | Native, Idiomatic                     |
+| **Key Strength**              | **Ultimate flexibility & readability <br />within Red's syntax.** | Clean, idiomatic, built-in. | Ubiquitous, huge ecosystem.   | Standard for data science.     | .NET integration, type-safe.                 | Pure expressiveness,<br />Lisp power. |
+
 ## Installation
 
 1. Download the `pipe-map.red` file.
