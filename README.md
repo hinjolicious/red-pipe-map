@@ -19,17 +19,29 @@ A powerful and elegant **pipelining and mapping** library for the [Red programmi
 
 ### Comparison of Piping & Mapping Features
 
-| Feature                             | **pipe-map.red (This Library)**                                   | **Elixir**            | **JavaScript (Lodash)** | **R (tidyverse)**        | **F#**                                 | **Clojure**                     |
-| :---------------------------------- | :---------------------------------------------------------------------- | :-------------------------- | :---------------------------- | :----------------------------- | :------------------------------------------- | :------------------------------------ |
-| **Piping Operator**           | `value`&#124;> `action`                                             | `value`&#124;> function  | `_.chain(value).func()`     | `value %>% function()`       | `<code>`value &#124;> function `</code>` | `(-> value (func))`                 |
-| **Mapping Operator**          | `series` ==> `action`                                               | `enum                       | > Enum.map(fn)`               | `_.map(collection, fn)`      | `map(list, fn)` or `purrr::map()`        | `list                                 |
-| **Implicit Placeholder**      | **Yes** ( `[* 2]` `= [_p * 2]`                               | Yes (&(&1 * 2)              | Yes (Lodash FP)               | Yes (`.` placeholder)        | No                                           | **Yes** (Threading macros)      |
-| **Explicit Placeholder**      | **Yes** (`_p`, `_m`, `_e`)                                  | `&1`, `&2`              | `(x) => x * 2`              | `~ .x`                       | `fun x -> x * 2`                           | `#(* % 2)`                          |
-| **Inline Filtering**          | **Yes** (`[filter _p [_e > 5]]`)                                | `Enum.filter(enum, fn)`   | `_.filter(collection, fn)`  | `filter(list, condition)`    | `List.filter(fn)`                          | `(filter fn coll)`                  |
-| **Mixed Piping/Mapping**      | **Yes** (Seamless &#124;> + `==>`)                              | Yes (with `Enum` module)  | Yes (with `.value()` break) | Yes (with `%>%` + `map()`) | Yes                                          | Yes                                   |
-| **Left-to-Right Assignment** | **Yes** (`value --> var`)                                       | No (standard `=`)         | No (standard `=`)           | `->` / `->>`               | No (standard `let`)                        | No                                    |
-| **Syntax Style**              | **Native, Idiomatic Red**                                         | Native, Idiomatic           | Library-based                 | Library-based                  | Native, Idiomatic                            | Native, Idiomatic                     |
-| **Key Strength**              | **Ultimate flexibility & readability <br />within Red's syntax.** | Clean, idiomatic, built-in. | Ubiquitous, huge ecosystem.   | Standard for data science.     | .NET integration, type-safe.                 | Pure expressiveness,<br />Lisp power. |
+
+| Feature                            | **This Library**                                                                  | **Haskell**                                                     | **Elixir**                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Pipe operator**            | `value \|> action` <br />(generic, works with funcs, <br />blocks, literals)          | No built-in, use function<br />composition `(.)` or custom `(&>)` | `value \|> func` <br />(macro expands to `func(value)`) |
+| **Map chaining**             | `value ==> action1 ==> action2` <br />(series only, placeholder `_m`)               | `map f . map g $ xs` <br />(function composition)                   | `Enum.map(xs, &f/1) \|> Enum.map(&g/1)`                   |
+| **Placeholder substitution** | `_p` (pipe), `_m` (map element), <br /> (filter element), also implicit `[+ val]` | Not built-in, use lambdas `\x -> ...`                               | Capture operator `&(&1 + 1)`                             |
+| **Filtering in chain**       | `\|> [filter _p [_e > 5]]` <br />(works in pipe and map seamlessly)                    | `filter (>5) xs` <br />(separate call, not inline in map chain)     | `xs \|> Enum.filter(&(&1 > 5))`                           |
+| **Side-effects**             | Explicit: must include value in<br />block (`[print ["***" _m "***"] _m]`)           | Pure by default, side-effects only in <br />`IO` monad              | Explicit IO, usually last in chain                         |
+| **Pipe-style assignment**    | `value --> var` <br />(syntactic sugar for `set var value`)                        | N/A                                                                   | N/A                                                        |
+| **Literal replacement**      | Pipe/map actions can be literal<br />values, replacing current value                    | Not possible (type mismatch)                                          | Not possible                                               |
+| **Mix pipe+map seamlessly**  | Yes (`init \|> f ==> g \|> h`)                                                          | Possible but verbose                                                  | Yes (`xs \|> Enum.map(&f/1) `)                            |
+
+| Feature                            | **This Library**                                                                  | **Clojure**                                       | **F#**                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------- |
+| **Pipe operator**            | `value \|> action` <br />(generic, works with funcs, <br />blocks, literals)          | Threading macros:`->`, `->>`                        | `\|>` built-in, same as Elixir        |
+| **Map chaining**             | `value ==> action1 ==> action2` <br />(series only, placeholder `_m`)               | `(->> xs (map f) (map g))`                            | `xs \|> List.map f \|> List.map g`     |
+| **Placeholder substitution** | `_p` (pipe), `_m` (map element), <br /> (filter element), also implicit `[+ val]` | Anonymous fn literal:`#(+ % 1)`                       | No implicit, must use `fun x -> ...` |
+| **Filtering in chain**       | `\|> [filter _p [_e > 5]]` <br />(works in pipe and map seamlessly)                    | `(->> xs (filter #(> % 5)))`                          | `xs \|> List.filter (fun x -> x > 5)` |
+| **Side-effects**             | Explicit: must include value in<br />block (`[print ["***" _m "***"] _m]`)           | Explicit side-effects<br />(printing/logging functions) | Explicit, but side-effects are allowed |
+| **Pipe-style assignment**    | `value --> var` <br />(syntactic sugar for `set var value`)                        | N/A                                                     | N/A                                    |
+| **Literal replacement**      | Pipe/map actions can be literal<br />values, replacing current value                    | Not possible                                            | Not possible                           |
+| **Mix pipe+map seamlessly**  | Yes (`init \|> f ==> g \|> h`)                                                          | Yes (`(->> xs (map f) (filter g))`)                   | Yes (`xs \|> List.map f `)            |
+
 
 ## Installation
 
@@ -160,19 +172,19 @@ probe my-map
 
 ### 2. Complex Mathematical Chain
 
-NOTE: This is to show the flexibility of this piping/mapping library, not necessarily the best way to code!
-
 ```red
 ; Generate stats for a list of random numbers
 random/seed 1
-(number-gen 100 1000 100) --> nums 
-	|> [
-		print ["count" length? _p] 
-		print ["mean" average _p] 
-		_p] 
-	|> [((variance _p) --> var) _p] 
-	|> [((stddev _p) --> sd) _p] 
-	|> [((pop-kurtosis _p) --> kurt) _p]
+(number-gen 100 1000 100)
+    --> nums
+    |> [
+        print ["Count:" length? _p]
+        print ["Mean:" average _p]
+        _p ; Pass the data on
+    ]
+    |> [variance _p] --> var
+    |> [stddev _p] --> sd
+    |> [pop-kurtosis _p] --> kurt
 
 print ["Variance:" var]
 print ["Std Dev:" sd]
