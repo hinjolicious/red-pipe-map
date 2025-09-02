@@ -162,7 +162,6 @@ printfn "Result: %s" result
 
 👉 Honestly, your Red DSL feels like **Elixir pipelines + F# assignment + Clojure placeholders** all rolled into one, but with **more scripting freedom** (e.g. literals, pipe-style assignment).
 
-
 ## Installation
 
 1. Download the `pipe-map.red` file.
@@ -293,22 +292,18 @@ probe my-map
 ### 2. Complex Mathematical Chain
 
 ```red
-; Generate stats for a list of random numbers
-random/seed 1
-(number-gen 100 1000 100)
-    --> nums
-    |> [
-        print ["Count:" length? _p]
-        print ["Mean:" average _p]
-        _p ; Pass the data on
-    ]
-    |> [variance _p] --> var
-    |> [stddev _p] --> sd
-    |> [pop-kurtosis _p] --> kurt
+(number-gen 100 1000 50) --> nums 
+	|> sort --> sorted 
+	|> [moving-average _p 5] --> smooth 
+	==> [/ 1000] --> normalized 
+	|> variance --> var 
+	|> sqrt --> sd
 
-print ["Variance:" var]
+print ["Raw:" take nums 10]
+print ["Sorted:" take sorted 10]
+print ["Smoothed:" take smooth 10]
+print ["Normalized:" take normalized 10]
 print ["Std Dev:" sd]
-print ["Kurtosis:" kurt]
 ```
 
 ## API Reference
