@@ -17,8 +17,9 @@ A powerful and elegant **pipelining and mapping** library for the [Red programmi
 * **⚙️ Flexible Actions:** Use functions, code blocks, or values directly in your chains.
 * **🧩 Explicit Side-Effects:** Perform debugging or logging without breaking the chain.
 
-### Comparison of Piping & Mapping Features
+## Comparison of Piping & Mapping Features
 
+(from AI)
 
 | Feature                            | **This Library**                                                                  | **Haskell**                                                     | **Elixir**                                           |
 | ---------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -26,7 +27,7 @@ A powerful and elegant **pipelining and mapping** library for the [Red programmi
 | **Map chaining**             | `value ==> action1 ==> action2` <br />(series only, placeholder `_m`)               | `map f . map g $ xs` <br />(function composition)                   | `Enum.map(xs, &f/1) \|> Enum.map(&g/1)`                   |
 | **Placeholder substitution** | `_p` (pipe), `_m` (map element), <br /> (filter element), also implicit `[+ val]` | Not built-in, use lambdas `\x -> ...`                               | Capture operator `&(&1 + 1)`                             |
 | **Filtering in chain**       | `\|> [filter _p [_e > 5]]` <br />(works in pipe and map seamlessly)                    | `filter (>5) xs` <br />(separate call, not inline in map chain)     | `xs \|> Enum.filter(&(&1 > 5))`                           |
-| **Side-effects**             | Explicit: must include value in<br />block (`[print ["***" _m "***"] _m]`)           | Pure by default, side-effects only in <br />`IO` monad              | Explicit IO, usually last in chain                         |
+| **Side-effects**             | Explicit: must include value in<br />block (`[print ["***" _m "***"] _m]`)           | Pure by default, side-effects only in<br />`IO` monad               | Explicit IO, usually last in chain                         |
 | **Pipe-style assignment**    | `value --> var` <br />(syntactic sugar for `set var value`)                        | N/A                                                                   | N/A                                                        |
 | **Literal replacement**      | Pipe/map actions can be literal<br />values, replacing current value                    | Not possible (type mismatch)                                          | Not possible                                               |
 | **Mix pipe+map seamlessly**  | Yes (`init \|> f ==> g \|> h`)                                                          | Possible but verbose                                                  | Yes (`xs \|> Enum.map(&f/1) `)                            |
@@ -41,6 +42,125 @@ A powerful and elegant **pipelining and mapping** library for the [Red programmi
 | **Pipe-style assignment**    | `value --> var` <br />(syntactic sugar for `set var value`)                        | N/A                                                     | N/A                                    |
 | **Literal replacement**      | Pipe/map actions can be literal<br />values, replacing current value                    | Not possible                                            | Not possible                           |
 | **Mix pipe+map seamlessly**  | Yes (`init \|> f ==> g \|> h`)                                                          | Yes (`(->> xs (map f) (filter g))`)                   | Yes (`xs \|> List.map f `)            |
+
+## 🚀 A **full mixed code showcase**.:
+
+(from AI)
+
+1. Start with a list of numbers.
+2. Double them (`map`).
+3. Print each doubled value (`side-effect`).
+4. Filter out values ≤ 5.
+5. Convert them to strings.
+6. Join into a single string.
+7. Assign/store the result.
+
+---
+
+### 🔴 Red (your lib)
+
+```red
+[1 2 3 4 5]
+   ==> [* 2]                               ; map: double
+   ==> [print ["doubled:" _m] _m]          ; side-effect (must return)
+   ==> [filter _m [_e > 5]]                ; filter
+   ==> to-string                           ; map: convert to string
+   |> rejoin                               ; pipe: join 
+   --> result                              ; assign (pipe-style)
+   print ["Result:" result]
+```
+
+✅ Fully left-to-right, mixing `==>` and `|>` seamlessly, with explicit assignment.
+
+---
+
+### 🔵 Haskell
+
+```haskell
+import Control.Monad (forM_)
+import Data.List (intercalate)
+
+main = do
+  let xs = [1,2,3,4,5]
+      doubled = map (*2) xs
+  forM_ doubled (\x -> putStrLn ("doubled: " ++ show x))
+  let filtered = filter (>5) doubled
+      result   = intercalate "" (map show filtered)
+  putStrLn ("Result: " ++ result)
+```
+
+➡ Verbose because of the **IO monad barrier**. Pure transformations vs. side-effects are separate steps.
+
+---
+
+### 🟣 Elixir
+
+```elixir
+result =
+  [1, 2, 3, 4, 5]
+  |> Enum.map(&(&1 * 2))
+  |> Enum.map(fn x -> IO.inspect(x, label: "doubled"); x end)
+  |> Enum.filter(&(&1 > 5))
+  |> Enum.map(&Integer.to_string/1)
+  |> Enum.join("")
+
+IO.puts("Result: #{result}")
+```
+
+➡ Side-effects (`IO.inspect`) sit cleanly inside the chain. No need to “break” the pipeline.
+
+---
+
+### 🟢 Clojure
+
+```clojure
+(def result
+  (->> [1 2 3 4 5]
+       (map #(* 2 %))
+       (map #(do (println "doubled:" %) %))
+       (filter #(> % 5))
+       (map str)
+       (apply str))) ; join
+
+(println "Result:" result)
+```
+
+➡ `do` handles side-effects inline. Uses `(apply str)` for joining.
+
+---
+
+### 🟠 F\#
+
+```fsharp
+let result =
+    [1; 2; 3; 4; 5]
+    |> List.map (fun x -> x * 2)
+    |> List.map (fun x -> printfn "doubled: %d" x; x)
+    |> List.filter (fun x -> x > 5)
+    |> List.map string
+    |> String.concat ""
+
+printfn "Result: %s" result
+```
+
+➡ Inline logging via `;` is natural. Assignment (`let`) is explicit.
+
+---
+
+### ⚖️ Side-by-Side Takeaways
+
+* **Red**:
+
+  * Most *fluid*: mixing `map`, `pipe`, filters, side-effects, and assignment in one chain.
+  * Assignment operator (`-->`) is unique — others break the chain to bind variables.
+* **Haskell**: clean purity but heavy ceremony — feels more “academic”.
+* **Elixir**: the closest in ergonomics — pipelines flow like Red, with `IO.inspect` for taps.
+* **Clojure**: very flexible; threading macros make it short, but `do` feels heavier.
+* **F#**: close to Elixir in readability; concise side-effects with `;`.
+
+---
+
+👉 Honestly, your Red DSL feels like **Elixir pipelines + F# assignment + Clojure placeholders** all rolled into one, but with **more scripting freedom** (e.g. literals, pipe-style assignment).
 
 
 ## Installation
