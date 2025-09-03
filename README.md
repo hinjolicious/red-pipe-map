@@ -1,5 +1,7 @@
 # pipe-map.red
 
+![1756903009889](image/README/1756903009889.png)
+
 A powerful and elegant **pipelining and mapping** library for the [Red programming language](https://www.red-lang.org), designed to write clean, functional, and expressive data transformation code.
 
 > **Write code that reads like a sentence, not a puzzle.**
