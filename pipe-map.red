@@ -1,107 +1,42 @@
 Red [
 	Title: "Piping and Mapping"
-	Version: 2.4.3
+	Version: "2.4.4-dev"
 	Author: "hinjolicious"
-	Feature: {
-		- Powerful generic piping/pipelining: value |> action1 |> action2 ...
-		- Powerful generic chainable mapping: value ==> action1 ==> action2 ...
-		- Pipelining style (left to right) assignment: value --> var
-		- Filtering function that works in both piping and mapping: value |> [filter _p [_e > 5]]
-		- Mixing of piping and mapping seamlessly
-	}
-	Changes: {
-		- piping op => is changed to ==> to avoid confusion with >= op
-		- added --> as a pipe-style assignment op
-		- added filtering func that works in both piping and mapping
-		- side-effect is now explicit, i.e. if you're trying to print or do any side-effects, you must
-		  explicitly pass the value to the pipe/map to not cause it error.
-	}
-	Usage: {
-		- include this file in your code: #include %pipe-map.red
-		- to run the test: comment the "halt", so it will continue executing the test codes
-		- Piping/Pipelining: 
-			init |> action1 |> action2 |> ...
-		- Mapping:
-			init ==> action1 ==> action2 ==> ...
-		- Mixed piping/Mapping:
-			init |> action1 ==> action2 ...
-		- Initial value can be anything: literal, variable, function
-		- Actions can be function, code block, variable, literal, etc.
-		- Code blocks are in the form: 
-			- [+ val]			- implicit placeholder
-			- [_p * (sin _p)]	- explicit placeholders
-		- Placeholders:
-			- _p		pipe value
-			- _m		mapping element
-			- _e		filter element
-		- Filter: filter is a helper function to filter things from the pipe/map:
-			- [filter _p [_e > 5]]
-			- [filter _m [(length? _e) > 5]]
-		- Left-to-right assignment:
-			value --> var 		assign value to variable var
+	License: "MIT"
+	Homepage: https://github.com/hinjolicious/pipe-map
+
+	Description: {
+		Generic functional-style piping & mapping operators for Red.
+		Supports chaining, filtering, and left-to-right assignment.
+		See https://github.com/hinjolicious/red-pipe-map/blob/main/README.md
 	}
 ]
 
-;#include %mylib.Red ; not needed!
+;#include %../../my-lib/mylib.Red ; not needed!
 
 pipe-map: context [
 
-; ### helper funcs ###
+;-- list of operators to check as a signature for a 'simple code' like [* 2]
 
-;-- find a word in block/paren recursively
+ops: [+ - * / ** // % = < > <= >= == and or not xor] ; just some standard operators
 
-find-deep: function [ block[block! paren!] word[word!] ][
-	forall block [
-		either word? item: first block [
-			if item = word [ return true ]
-		][
-			if any [block? item paren? item] 
-				[ if find-deep item word [return true] ]
-		]
-	]
-	false
-]
+;-- the function that handle the real actions for the pipes and maps
 
-;-- replace all words with a value in a block/paren recursively
-
-replace-deep: function [ block[block! paren!] word[word!] value[any-type!] ] [
-	forall block [
-		either word? item: first block [
-			if item = word [
-				change/only block value ; must use /only!!!
-			]
-		][
-			if any [block? item paren? item] 
-				[ replace-deep item word value ]
-		]
-	] 
-	block
-]
-
-;-- the real function that handle actions for the pipe and map
-
-do-action: function [value action ph] [
-	either word? action [ 
-		; value or a function with one arg only
+do-action: function [value action ph][
+	either word? action [ ; a var or a func (one arg)
 		res: do compose [(action) value]
 	][
-		either block? action [ ; normal code, simple code, or just a block
-			act: copy/deep action ; use a copy, because it will be changed!
-			either find-deep act ph [ 
-				; normal code with placeholders "_p" as in [10 / _p] or [_p * sin _p]
-				replace-deep act ph value ; replace all placeholders with actual value
-				res: do act
+		either block? action [
+			either find ops action/1 [ ; simple code [* 2]
+				res: do compose [(value) (action)] ; [* 2] to [10 * 2]
 			][
-				; simple code is using an implicit placeholder like [* 2], meaning [_p * 2]
-				; to pass a block in the middle of the pipe, use nested block like [[1 2 3]]
-				; a normal block will assign the value of the last element only! 
-				; [1 2 3] will assign 3
-				insert act value ; insert the actual value
-				res: do act
+				; complex code with placeholders "_p" as in [10 / _p] or [_p * sin _p]
+				act: function compose [(ph)] action
+				res: act value
 			]
 		][
-			; just a literal value, it will replace pipe's value
-			res: action	
+			res: action	; literal value: number, string, etc. it will replace pipe value
+			; literal block are passed as a nested block [ [1 2 3] ], see above!
 		]
 	]
 	res
@@ -109,7 +44,7 @@ do-action: function [value action ph] [
 
 ; ### op-style generic pipelining ###
 
-pipe: make op! func [	
+pipe: make op! function [	
 	"Pipelining - process value through an action, chainable to more actions" 
 	value[any-type!] 	"any types"
 	'action[any-type!] 	"func, code, val (replace), side-effects (print)"
